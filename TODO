@@ -1,0 +1,65 @@
+
+
+1 Add timeout for adding a contact that doesn't exist/can't
+  be found
+
+2 Add forwarding service to ensure messages get delivered
+  when users go offline
+  Proposed Process:
+    1) User A signs then encrypts a message meant for User B
+    2) User A signs then encrypts the already encrypted
+       message for a forwarding server
+    3) User A sends the message for the forwarding server
+    4) The forwarding server periodically sends the message
+       meant for User B
+    5) User B receives the message successfully
+    6) User B encrypts the signer (User A) and ID of the
+       received message for the forwarding server and sends it
+    7) The forwarding server receives the request and
+       stops sending User A's message to User B on the basis
+       of only User B can figure out User A sent the message
+       using the specific ID given by the forwarding server
+    8) The forwarding server signs and encrypts the
+       encrypted message meant for User B and sends that to
+       User A periodically
+    9) User A gets confirmation that User B successfully
+       received the message
+   10) User A signs and encrypts the encrypted message meant
+       for User B and the ID from the confirmation message
+       and sends it to the forwarding server
+   11) The forwarding server stops sending the confirmation
+       message to User A
+  Pros:
+    - No intervention from User A after the message is sent
+    - User B will always eventually get the message
+    - The forwarding server does not know the content of the
+      message
+    - The forwarding server does not know who the message
+      is being sent to (unless User B signs the request to
+      stop the forwarding server to stop sending the message)
+    - The forwarding server doesn't need to store a lot of
+      data if only the hash for the message from User A to
+      User B is transferred
+  Cons:
+    - The forwarding server knows User A is sending a message
+      at a specific time
+    - Contributes a lot of network traffic
+  General Notes:
+    - CPU intensive
+    - Network bandwidth intensive (depending on forwarding interval)
+    - Light storage use
+    - Can be compatible with Filecoin storage network
+  Todo Further Research:
+    - Decentralized hashmap (IPLD spec) for mapping users
+      (like User A) to a (IPLD) list of unreceived and unconfirmed
+      messages
+    - Decentralized database (orbitdb) instead of hashmap?
+    - Does Pubsub inherently cause high network traffic/congestion
+
+3 Add a GUI
+
+4 Consider other more mature encryption libraries
+
+5 Add Filecoin integration (related to #2)
+
+6 Make a better way of handling sent messages vs messages sent to self
