@@ -53,6 +53,10 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		scanner.Scan()
 		email := scanner.Text()
 		identity = crypto.NewSelfIdentity(name, comment, email)
+		if identity == nil {
+			println("Error identity is nil...exiting")
+			return
+		}
 		err := identity.SaveToFile(viper.GetString("identity"))
 		if err != nil {
 			panic(err)
@@ -77,7 +81,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		seq, _ := util.BytesToUint64(message.Seq())
 		origin := message.From()
 		hash := message.Data()
-		topics := strings.Join(message.Topics(),"")
+		topics := strings.Join(message.Topics(), "")
 		if strings.Contains(topics, crypto.MessageTopicName) {
 			if bytes.HasPrefix(hash, []byte(crypto.MessageCidPrefix)) &&
 				bytes.HasSuffix(hash, []byte(crypto.MessageCidPostfix)) {
@@ -92,18 +96,18 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 					return
 				}
 				msg := crypto.NewMessage(encryptedMsg, seq, origin, identity, contacts,
-					func (keys []gpg.Key, symmetric bool) ([]byte, error) {
-					result := make([]byte, 0)
-					for _, key := range keys {
-						println("==> End your passphrase for", key.PublicKey.KeyIdShortString())
-						print("==> ")
-						if !scanner.Scan() {
-							return nil, errors.New("EOF")
+					func(keys []gpg.Key, symmetric bool) ([]byte, error) {
+						result := make([]byte, 0)
+						for _, key := range keys {
+							println("==> End your passphrase for", key.PublicKey.KeyIdShortString())
+							print("==> ")
+							if !scanner.Scan() {
+								return nil, errors.New("EOF")
+							}
+							result = append(result, scanner.Bytes()...)
 						}
-						result = append(result, scanner.Bytes()...)
-					}
-					return result, nil
-				})
+						return result, nil
+					})
 				if msg != nil {
 					entities := identity.EntityList()
 
@@ -137,7 +141,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		read := scanner.Text()
 		if strings.HasPrefix(read, "send ") {
 			to := crypto.NewIdentityList()
-			trimmed := strings.TrimPrefix(read,"send ")
+			trimmed := strings.TrimPrefix(read, "send ")
 			split := strings.Split(trimmed, " ")
 			removed := 0
 			for i, v := range split {
@@ -164,7 +168,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 					//	println(val, "was added to the recipient list")
 					//}
 					to.Add(found...)
-					split = append(split[:i - removed], split[i - removed + 1:]...)
+					split = append(split[:i-removed], split[i-removed+1:]...)
 					removed++
 				}
 				if strings.HasPrefix(v, "ipfsto:") { // FIXME EOF error on message received ---- fixed?
@@ -309,7 +313,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 
 func chooseFromArray(prompt string, input func() string, array []*gpg.Entity, toString func(entity *gpg.Entity) string) ([]*gpg.Entity, error) {
 	for i, entity := range array {
-		println("", "", i + 1, toString(entity))
+		println("", "", i+1, toString(entity))
 	}
 	println("==>", prompt)
 	println("==> [N]one [A]ll or (1 2 3, 1-3, ^4)")
@@ -325,7 +329,7 @@ func chooseFromArray(prompt string, input func() string, array []*gpg.Entity, to
 	toEdit := make([]*gpg.Entity, 0)
 	if !eOtherInclude.Get("n") && !eOtherInclude.Get("none") {
 		for i, base := range array {
-			if !eIsInclude && eExclude.Get(len(array)-i - 1) {
+			if !eIsInclude && eExclude.Get(len(array)-i-1) {
 				continue
 			}
 
@@ -334,11 +338,11 @@ func chooseFromArray(prompt string, input func() string, array []*gpg.Entity, to
 				continue
 			}
 
-			if eIsInclude && (eInclude.Get(len(array)-i - 1)) {
+			if eIsInclude && (eInclude.Get(len(array) - i - 1)) {
 				toEdit = append(toEdit, base)
 			}
 
-			if !eIsInclude && (!eExclude.Get(len(array)-i - 1)) {
+			if !eIsInclude && (!eExclude.Get(len(array) - i - 1)) {
 				toEdit = append(toEdit, base)
 			}
 		}
@@ -373,7 +377,7 @@ func printEntities(read string, entities gpg.EntityList, hashList *list.List) {
 	if strings.EqualFold(read, "qrcode") {
 		printQR = true
 	}
-	for i, hash := 0, hashList.Front(); i < len(entities) && hash != nil; i, hash = i + 1, hash.Next() {
+	for i, hash := 0, hashList.Front(); i < len(entities) && hash != nil; i, hash = i+1, hash.Next() {
 		if hash.Value == nil {
 			continue
 		}
