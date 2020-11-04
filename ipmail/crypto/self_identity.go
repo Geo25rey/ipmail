@@ -13,7 +13,7 @@ type SelfIdentity interface {
 }
 
 type selfIdentity struct {
-	identities IdentityList
+	identities      IdentityList
 	defaultIdentity *gpg.Entity
 }
 
@@ -22,6 +22,7 @@ func NewSelfIdentity(name string, comment string, email string) SelfIdentity {
 	var err error
 	result.defaultIdentity, err = gpg.NewEntity(name, comment, email, util.DefaultEncryptionConfig())
 	if err != nil {
+		println(err.Error())
 		return nil
 	}
 	result.identities = NewIdentityList(result.defaultIdentity)
@@ -50,7 +51,7 @@ func NewSelfIdentityFromFile(path string) SelfIdentity {
 	}
 	return &selfIdentity{
 		defaultIdentity: entities[0],
-		identities: NewIdentityList(entities...),
+		identities:      NewIdentityList(entities...),
 	}
 }
 
