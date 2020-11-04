@@ -3,7 +3,13 @@ InterPlanetary Mail (IPMail) is a decentralized email alternative, which uses IP
 
 ## Building
 1) Install go [here](https://golang.org/dl/) or from your favorite package manager.
-2) Run `./build.sh` 
+2) Run `./build.sh`<br/>
+   <b>OR</b><br/>
+   Run the following commands:
+   ```bash
+   mkdir build && cd build
+   go build ..
+   ```
 3) Building done. Look in the build build folder for the `ipmail` program
 
 ## Basic Use
