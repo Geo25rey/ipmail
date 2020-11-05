@@ -36,9 +36,6 @@ func (r *receiverImpl) OnMessage(function ReceiveFunction, isAsync bool) {
 func (r *receiverImpl) Close() error {
 	err := r.subscription.Close()
 	r.waitForHandler.Unlock()
-	if r.messageHandler == nil {
-		r.waitForHandler.Unlock()
-	}
 	return err
 }
 
@@ -46,8 +43,11 @@ func (r *receiverImpl) subscriptionHandler() {
 	var err error
 	var message iface.PubSubMessage
 	r.waitForHandler.Lock()
-	for message, err = r.subscription.Next(r.ipfs.Context());
-		err == nil && message != nil; message,
+	if r.messageHandler == nil {
+		r.waitForHandler.Unlock()
+		return
+	}
+	for message, err = r.subscription.Next(r.ipfs.Context()); err == nil && message != nil; message,
 		err = r.subscription.Next(r.ipfs.Context()) {
 		if r.isAsync {
 			go r.messageHandler(message)
@@ -69,4 +69,3 @@ func NewReceiver(topic string, ipfs *Ipfs) (Receiver, error) {
 	go result.subscriptionHandler()
 	return &result, nil
 }
-
