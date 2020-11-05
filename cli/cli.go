@@ -23,6 +23,31 @@ import (
 	"strings"
 )
 
+func hasInvalidCharacters(s string) (bool, int32) {
+	for _, c := range s {
+		switch c {
+		case '(', ')', '<', '>', 0:
+			return true, c
+		}
+	}
+	return false, 0
+}
+
+func prompt(scanner *bufio.Scanner, field string) string {
+	for true {
+		fmt.Printf("%s?\n> ", field)
+		scanner.Scan()
+		val := scanner.Text()
+		checkFailed, failedChar := hasInvalidCharacters(val)
+		if checkFailed {
+			fmt.Printf("%s can not contain '%c', try again", field, failedChar)
+			continue
+		}
+		return val
+	}
+	return ""
+}
+
 func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 	identity crypto.SelfIdentity, contacts crypto.ContactsIdentityList,
 	messages ipmail.MessageList, sent ipmail.MessageList) {
@@ -40,26 +65,19 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		println("You can optionally enter your name, a comment, and your email")
 		println("to help identify yourself to people you message.")
 		println("Don't worry this information is only stored on your computer.")
-		println("Name?")
-		print("> ")
-		scanner.Scan()
-		name := scanner.Text()
-		println("Comment?")
-		print("> ")
-		scanner.Scan()
-		comment := scanner.Text()
-		println("Email?")
-		print("> ")
-		scanner.Scan()
-		email := scanner.Text()
-		identity = crypto.NewSelfIdentity(name, comment, email)
-		if identity == nil {
-			println("Error identity is nil...exiting")
+		name := prompt(scanner, "Name")
+		comment := prompt(scanner, "Comment")
+		email := prompt(scanner, "Email")
+		var err error
+		identity, err = crypto.NewSelfIdentity(name, comment, email)
+		if err != nil {
+			println(err.Error())
 			return
 		}
-		err := identity.SaveToFile(viper.GetString("identity"))
+		err = identity.SaveToFile(viper.GetString("identity"))
 		if err != nil {
-			panic(err)
+			println(err.Error())
+			return
 		}
 		if contacts != nil {
 			contacts.Add(identity.EntityList()...)

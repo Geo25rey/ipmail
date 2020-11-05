@@ -17,16 +17,15 @@ type selfIdentity struct {
 	defaultIdentity *gpg.Entity
 }
 
-func NewSelfIdentity(name string, comment string, email string) SelfIdentity {
+func NewSelfIdentity(name string, comment string, email string) (SelfIdentity, error) {
 	result := selfIdentity{}
 	var err error
 	result.defaultIdentity, err = gpg.NewEntity(name, comment, email, util.DefaultEncryptionConfig())
 	if err != nil {
-		println(err.Error())
-		return nil
+		return nil, err
 	}
 	result.identities = NewIdentityList(result.defaultIdentity)
-	return &result
+	return &result, nil
 }
 
 func (s *selfIdentity) DefaultIdentity() *gpg.Entity {
