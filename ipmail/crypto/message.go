@@ -2,10 +2,10 @@ package crypto
 
 import (
 	"errors"
-	"github.com/libp2p/go-libp2p-core/peer"
 	gpg "github.com/Geo25rey/crypto/openpgp"
 	"github.com/Geo25rey/crypto/openpgp/armor"
 	"github.com/Geo25rey/crypto/openpgp/packet"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"io"
 	"io/ioutil"
 	"ipmail/ipmail/util"
@@ -78,7 +78,7 @@ func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, 
 		if strings.Compare(decode.Type, MessageEncoding) != 0 {
 			return errors.New("data not encrypted as a message")
 		}
-		var keyring gpg.KeyRing = append(identity.EntityList(), contacts.ToArray()...)//append(contacts.ToArray(), identity.EntityList()...))
+		var keyring gpg.KeyRing = append(identity.EntityList(), contacts.ToArray()...) //append(contacts.ToArray(), identity.EntityList()...))
 		readMessage, err := gpg.ReadMessage(decode.Body, keyring, prompt, util.DefaultEncryptionConfig())
 		if err != nil {
 			return err
@@ -89,6 +89,7 @@ func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, 
 			return err
 		}
 		_, _ = ioutil.ReadAll(decode.Body) // allow the writer in goroutine to close
+		// since armor decoder doesn't finish reading
 		m.fromEntity = readMessage.SignedBy.Entity
 		mapRange := reflect.ValueOf(m.fromEntity.Identities).MapRange()
 		mapRange.Next()
@@ -118,7 +119,7 @@ func (m *message) String() string {
 	result := make([]byte, 0)
 	result = append(result, "ID: "...)
 	result = strconv.AppendUint(result, m.id, 10)
-	result = append(result, " Name: " + m.FromName()...)
+	result = append(result, " Name: "+m.FromName()...)
 	return string(result)
 }
 
