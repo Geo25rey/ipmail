@@ -88,8 +88,10 @@ func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, 
 		if err != nil {
 			return err
 		}
-		_, _ = ioutil.ReadAll(decode.Body) // allow the writer in goroutine to close
-		// since armor decoder doesn't finish reading
+		_, err = ioutil.ReadAll(decode.Body) // allow the writer in goroutine to close
+		if err != nil {                      // fail if I/O error or armor verification fails
+			return err
+		}
 		m.fromEntity = readMessage.SignedBy.Entity
 		mapRange := reflect.ValueOf(m.fromEntity.Identities).MapRange()
 		mapRange.Next()
