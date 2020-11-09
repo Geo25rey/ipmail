@@ -177,6 +177,8 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 	print("==> ")
 	for scanner.Scan() {
 		read := scanner.Text()
+		sharing := false
+	send:
 		if strings.HasPrefix(read, "send ") {
 			to := crypto.NewIdentityList()
 			trimmed := strings.TrimPrefix(read, "send ")
@@ -208,8 +210,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 					to.Add(found...)
 					split = append(split[:i-removed], split[i-removed+1:]...)
 					removed++
-				}
-				if strings.HasPrefix(v, "ipfsto:") { // FIXME EOF error on message received ---- fixed?
+				} else if sharing && strings.HasPrefix(v, "ipfsto:") { // FIXME EOF error on message received ---- fixed?
 					v = strings.TrimPrefix(v, "ipfsto:") // FIXME new "unexpected EOF" ---- 2) fixed by x/crypto fork
 					id, err := cid.Parse(v)
 					if err == nil {
