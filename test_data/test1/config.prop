@@ -1,0 +1,7 @@
+config = test_data/test1/config.prop
+contacts = test_data/test1/contacts
+identity = test_data/test1/identity
+ipfs-repo = test_data/test1/ipfs-repo
+messages = test_data/test1/messages
+sent = test_data/test1/sent
+requests = test_data/test1/requests
