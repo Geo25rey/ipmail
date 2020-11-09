@@ -61,19 +61,6 @@ func createTempRepo(repoPath *string) (*string, error) {
 		return nil, err
 	}
 
-	// Sets swarm ports to random - helps with port conflicts
-	maxTries := 3
-	err = config.Profiles["randomports"].Transform(cfg)
-	for i := 0; i < maxTries; i++ {
-		if err == nil {
-			break
-		}
-		err = config.Profiles["randomports"].Transform(cfg)
-	}
-	if err != nil {
-		return nil, err
-	}
-
 	// Create the repo with the config
 	err = fsrepo.Init(*repoPath, cfg)
 	if err != nil {
@@ -89,6 +76,26 @@ func createTempRepo(repoPath *string) (*string, error) {
 func createNode(ctx context.Context, repoPath string) (icore.CoreAPI, error) {
 	// Open the repo
 	repo, err := fsrepo.Open(repoPath)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := repo.Config()
+
+	// Sets swarm ports to random - helps with port conflicts
+	maxTries := 3
+	err = config.Profiles["randomports"].Transform(cfg)
+	for i := 0; i < maxTries; i++ {
+		if err == nil {
+			break
+		}
+		err = config.Profiles["randomports"].Transform(cfg)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.SetConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
