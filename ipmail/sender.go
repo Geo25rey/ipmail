@@ -28,8 +28,6 @@ func (this *senderCtx) Send(content io.Reader, sign bool, from *gpg.Entity, to .
 	r, w := io.Pipe()
 	defer r.Close()
 
-	println(util.EntitiesEqual(append(to, from)...))
-
 	var signer *gpg.Entity
 
 	if sign {
