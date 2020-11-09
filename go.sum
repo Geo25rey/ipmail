@@ -31,8 +31,6 @@ github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96/go.mod h1:bOv
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/Geo25rey/crypto v0.0.0-20201031205908-d24fee82bd31 h1:V46nCXcF77dAKRzzvdUIWloEddT9ZEgQ3PHvvYyDOpw=
-github.com/Geo25rey/crypto v0.0.0-20201031205908-d24fee82bd31/go.mod h1:HNFs0s7cpLsfQacdIlGRcC/4E1IS+bPmXwc0olc32Zs=
 github.com/Geo25rey/crypto v0.0.0-20201104173533-18b43627849a h1:OXbK7jSei/TV/xJN8zCaXDKOEMFhI6g7lY8YL9dVCeE=
 github.com/Geo25rey/crypto v0.0.0-20201104173533-18b43627849a/go.mod h1:HNFs0s7cpLsfQacdIlGRcC/4E1IS+bPmXwc0olc32Zs=
 github.com/Jguer/go-alpm/v2 v2.0.1/go.mod h1:zU4iKCtNkDARfj5BrKJXYAQ5nIjtZbySfa0paboSmTQ=
