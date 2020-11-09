@@ -5,32 +5,34 @@ import (
 	"container/list"
 	"io/ioutil"
 	"ipmail/ipmail/crypto"
+	"ipmail/ipmail/util"
 	"os"
 	"sync"
 )
 
 type MessageList interface {
 	Add(message crypto.Message)
+	Remove(message crypto.Message)
 	ForEach(do func(message crypto.Message))
 	FromId(id uint64) crypto.Message
 	SaveToFile(file string) error
 }
 
 type messageList struct {
-	mtx sync.Mutex
+	mtx  sync.Mutex
 	list *list.List
 }
 
 func NewMessageList() MessageList {
 	result := messageList{
-		mtx: sync.Mutex{},
+		mtx:  sync.Mutex{},
 		list: list.New(),
 	}
 	return &result
 }
 
 func NewMessageListFromFile(file string,
-	identity crypto.SelfIdentity, contacts crypto.ContactsIdentityList,
+	ipfs util.Cat, identity crypto.SelfIdentity, contacts crypto.ContactsIdentityList,
 ) MessageList {
 	if identity == nil || contacts == nil {
 		return nil
@@ -45,7 +47,7 @@ func NewMessageListFromFile(file string,
 	buffer := bytes.NewBuffer(buf)
 	for buffer.Len() > 0 {
 		var msg crypto.Message
-		msg, err = crypto.ReadMessage(buffer, identity, contacts)
+		msg, err = crypto.ReadMessage(buffer, ipfs, identity, contacts)
 		if err != nil {
 			break
 		}
@@ -64,7 +66,19 @@ func (m *messageList) Add(message crypto.Message) {
 	m.mtx.Unlock()
 }
 
-func (m *messageList) ForEach(do func(message crypto.Message))  {
+func (m *messageList) Remove(message crypto.Message) {
+	m.mtx.Lock()
+	for elm := m.list.Back(); elm != nil; elm = elm.Prev() {
+		compare := elm.Value.(crypto.Message)
+		if compare.Id() == message.Id() {
+			m.list.Remove(elm)
+			break
+		}
+	}
+	m.mtx.Unlock()
+}
+
+func (m *messageList) ForEach(do func(message crypto.Message)) {
 	m.mtx.Lock()
 	for elm := m.list.Front(); elm != nil; elm = elm.Next() {
 		do(elm.Value.(crypto.Message))

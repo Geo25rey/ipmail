@@ -16,11 +16,11 @@ import (
 	"strings"
 )
 
-type cat interface {
+type Cat interface {
 	Cat(resolved path.Resolved) ([]byte, error)
 }
 
-func ParseEntity(str string, ipfs cat) (*gpg.Entity, error) {
+func ParseEntity(str string, ipfs Cat) (*gpg.Entity, error) {
 	var b []byte = nil
 	if strings.HasPrefix(str, "file:") {
 		str = strings.TrimPrefix(str, "file:")
@@ -74,7 +74,7 @@ func EntityToString(entity *gpg.Entity) string {
 	return result
 }
 
-func SaveEntities(w io.Writer, entities... *gpg.Entity) error {
+func SaveEntities(w io.Writer, entities ...*gpg.Entity) error {
 	entityList := gpg.EntityList(entities)
 	for _, v := range entityList {
 		err := v.Serialize(w)
@@ -85,7 +85,7 @@ func SaveEntities(w io.Writer, entities... *gpg.Entity) error {
 	return nil
 }
 
-func SaveEntitiesPrivate(w io.Writer, entities... *gpg.Entity) error {
+func SaveEntitiesPrivate(w io.Writer, entities ...*gpg.Entity) error {
 	entityList := gpg.EntityList(entities)
 	for _, v := range entityList {
 		err := v.SerializePrivate(w, DefaultEncryptionConfig())
@@ -110,7 +110,7 @@ func LoadEntities(r io.Reader) (gpg.EntityList, error) {
 	return result, nil
 }
 
-func EntitiesEqual(entities... *gpg.Entity) bool {
+func EntitiesEqual(entities ...*gpg.Entity) bool {
 	if len(entities) < 2 {
 		return true
 	}
@@ -157,4 +157,3 @@ func DefaultEncryptionConfig() *packet.Config {
 		RSABits:                4096,
 	}
 }
-

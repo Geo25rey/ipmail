@@ -20,11 +20,11 @@ func setupConfig() error {
 	viper.SetConfigName(configName)
 	viper.SetConfigType("ini")
 	viper.AddConfigPath(xdg.ConfigHome() + "/ipmail")
-	_ = os.Mkdir(xdg.ConfigHome() + "/ipmail", os.ModeDir | 0755)
-	_ = os.Mkdir(xdg.DataHome() + "/ipmail", os.ModeDir | 0755)
-	if _, err := os.Stat(path.Join(xdg.ConfigHome()+"/ipmail", configName)); os.IsNotExist(err) {
+	_ = os.Mkdir(xdg.ConfigHome()+"/ipmail", os.ModeDir|0755)
+	_ = os.Mkdir(xdg.DataHome()+"/ipmail", os.ModeDir|0755)
+	if _, err := os.Stat(path.Join(xdg.ConfigHome()+"/ipmail", configName+".prop")); os.IsNotExist(err) {
 		err := ioutil.WriteFile(
-			path.Join(xdg.ConfigHome()+"/ipmail", configName),
+			path.Join(xdg.ConfigHome()+"/ipmail", configName+".prop"),
 			[]byte(""),
 			0660)
 		if err != nil {
@@ -32,16 +32,28 @@ func setupConfig() error {
 		}
 		return nil
 	}
-	return nil // TODO read in config file
+	return viper.ReadInConfig()
 }
 
 func parseCmdLine() error {
-	flag.String("config", xdg.ConfigHome() + "/ipmail" + "/" + configName, "loads specified config file")
-	defer func() {
-		config := viper.GetString("config")
-		if strings.Compare(config, viper.ConfigFileUsed()) == 0 {
-			return
-		}
+	flag.String("config", xdg.ConfigHome()+"/ipmail"+"/"+configName+".prop", "loads specified config file")
+	flag.String("identity", xdg.DataHome()+"/ipmail"+"/"+"identity", "")
+	flag.String("contacts", xdg.DataHome()+"/ipmail"+"/"+"contacts", "")
+	flag.String("messages", xdg.DataHome()+"/ipmail"+"/"+"messages", "")
+	flag.String("sent", xdg.DataHome()+"/ipmail"+"/"+"sent", "")
+	flag.String("requests", xdg.DataHome()+"/ipmail"+"/"+"requests", "")
+	flag.String("ipfs-repo", xdg.DataHome()+"/ipmail"+"/"+"ipfs-repo", "")
+
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+	err := viper.BindPFlags(pflag.CommandLine)
+	if err != nil {
+		return err
+	}
+	_ = os.Mkdir(viper.GetString("ipfs-repo"), os.ModeDir|0755)
+
+	config := viper.GetString("config")
+	if strings.Compare(config, viper.ConfigFileUsed()) != 0 {
 		viper.SetConfigFile(config)
 		err := viper.ReadInConfig()
 		if err != nil {
@@ -49,19 +61,9 @@ func parseCmdLine() error {
 		} else {
 			_ = viper.BindPFlags(pflag.CommandLine) // ignore err is handled by return
 		}
-	}()
+	}
 
-	flag.String("identity", xdg.DataHome() + "/ipmail" + "/" + "identity", "")
-	flag.String("contacts", xdg.DataHome() + "/ipmail" + "/" + "contacts", "")
-	flag.String("messages", xdg.DataHome() + "/ipmail" + "/" + "messages", "")
-	flag.String("sent", xdg.DataHome() + "/ipmail" + "/" + "sent", "")
-	flag.String("ipfs-repo", xdg.DataHome() + "/ipmail" + "/" + "ipfs-repo", "")
-
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Parse()
-	err := viper.BindPFlags(pflag.CommandLine)
-	_ = os.Mkdir(viper.GetString("ipfs-repo"), os.ModeDir | 0755)
-	viper.WriteConfig()
+	err = viper.WriteConfig()
 	return err
 }
 
@@ -91,9 +93,11 @@ func main() {
 	contactsFile := viper.GetString("contacts")
 	contacts, _ = crypto.NewContactsIdentityListFromFile(contactsFile) // nil if file not found
 	messagesFile := viper.GetString("messages")
-	messages := ipmail.NewMessageListFromFile(messagesFile, identity, contacts) // nil if file not found
+	messages := ipmail.NewMessageListFromFile(messagesFile, ipfs, identity, contacts) // nil if file not found
 	sentFile := viper.GetString("sent")
-	sent := ipmail.NewMessageListFromFile(sentFile, identity, contacts) // nil if file not found
-	cli.Run(ipfs, sender, receiver, identity, contacts, messages, sent)
+	sent := ipmail.NewMessageListFromFile(sentFile, ipfs, identity, contacts) // nil if file not found
+	requestsFile := viper.GetString("requests")
+	requests := ipmail.NewMessageListFromFile(requestsFile, ipfs, identity, contacts) // nil if file not found
+	cli.Run(ipfs, sender, receiver, identity, contacts, messages, sent, requests)
 	receiver.Close()
 }

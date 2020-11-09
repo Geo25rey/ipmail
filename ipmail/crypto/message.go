@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"errors"
 	gpg "github.com/Geo25rey/crypto/openpgp"
 	"github.com/Geo25rey/crypto/openpgp/armor"
@@ -15,6 +16,7 @@ import (
 )
 
 type Message interface {
+	From() *gpg.Entity
 	FromName() string
 	FromEmail() string
 	Data() []byte
@@ -43,7 +45,7 @@ type message struct {
 }
 
 func NewMessage(encryptedData []byte, id uint64, origin peer.ID,
-	identity SelfIdentity, contacts ContactsIdentityList, prompt gpg.PromptFunction) Message {
+	ipfs util.Cat, identity SelfIdentity, contacts ContactsIdentityList, prompt gpg.PromptFunction) Message {
 	result := message{
 		encryptedData: encryptedData,
 		decryptedData: nil,
@@ -51,7 +53,7 @@ func NewMessage(encryptedData []byte, id uint64, origin peer.ID,
 		id:            id,
 		origin:        origin,
 	}
-	err := result.decrypt(identity, contacts, prompt)
+	err := result.decrypt(ipfs, identity, contacts, prompt)
 	if err != nil {
 		println(err.Error())
 		return nil
@@ -59,7 +61,7 @@ func NewMessage(encryptedData []byte, id uint64, origin peer.ID,
 	return &result
 }
 
-func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, prompt gpg.PromptFunction) error {
+func (m *message) decrypt(ipfs util.Cat, identity SelfIdentity, contacts ContactsIdentityList, prompt gpg.PromptFunction) error {
 	if m.decryptedData == nil {
 		r, w := io.Pipe()
 		defer r.Close()
@@ -78,7 +80,7 @@ func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, 
 		if strings.Compare(decode.Type, MessageEncoding) != 0 {
 			return errors.New("data not encrypted as a message")
 		}
-		var keyring gpg.KeyRing = append(identity.EntityList(), contacts.ToArray()...) //append(contacts.ToArray(), identity.EntityList()...))
+		var keyring gpg.KeyRing = append(identity.EntityList(), contacts.ToArray()...)
 		readMessage, err := gpg.ReadMessage(decode.Body, keyring, prompt, util.DefaultEncryptionConfig())
 		if err != nil {
 			return err
@@ -92,20 +94,49 @@ func (m *message) decrypt(identity SelfIdentity, contacts ContactsIdentityList, 
 		if err != nil {                      // fail if I/O error or armor verification fails
 			return err
 		}
-		m.fromEntity = readMessage.SignedBy.Entity
-		mapRange := reflect.ValueOf(m.fromEntity.Identities).MapRange()
-		mapRange.Next()
-		m.from = mapRange.Value().Interface().(*gpg.Identity).UserId
+		if readMessage.IsSigned {
+			if readMessage.SignedBy == nil {
+				entity, err := util.ParseEntity(string(m.decryptedData), ipfs)
+				if err != nil {
+					return err
+				}
+				if entity.PrimaryKey.KeyId != readMessage.SignedByKeyId {
+					return errors.New("parsed key id doesn't match signed key id...ignoring contact request")
+				}
+				m.fromEntity = entity
+			} else {
+				m.fromEntity = readMessage.SignedBy.Entity
+			}
+			mapRange := reflect.ValueOf(m.fromEntity.Identities).MapRange()
+			mapRange.Next()
+			m.from = mapRange.Value().Interface().(*gpg.Identity).UserId
+		}
 		return nil
 	}
 	return errors.New("already decrypted message")
 }
 
+func (m *message) From() *gpg.Entity {
+	buf := bytes.NewBuffer(make([]byte, 0))
+	err := m.fromEntity.Serialize(buf)
+	if err != nil {
+		return nil
+	}
+	entity, err := gpg.ReadEntity(packet.NewReader(buf))
+	return entity
+}
+
 func (m *message) FromName() string {
+	if m.from == nil {
+		return "Unknown"
+	}
 	return m.from.Name
 }
 
 func (m *message) FromEmail() string {
+	if m.from == nil {
+		return "Unknown"
+	}
 	return m.from.Email
 }
 
@@ -154,7 +185,7 @@ func (m *message) Serialize(w io.Writer) error {
 	return err
 }
 
-func ReadMessage(r io.Reader, identity SelfIdentity, contacts ContactsIdentityList) (Message, error) {
+func ReadMessage(r io.Reader, ipfs util.Cat, identity SelfIdentity, contacts ContactsIdentityList) (Message, error) {
 	if contacts == nil {
 		return nil, errors.New("contacts may not be nil")
 	}
@@ -205,7 +236,7 @@ func ReadMessage(r io.Reader, identity SelfIdentity, contacts ContactsIdentityLi
 		return nil, errors.New("unexpected EOF")
 	}
 	result.id, _ = util.BytesToUint64(intBuf)
-	err = result.decrypt(identity, contacts, nil)
+	err = result.decrypt(ipfs, identity, contacts, nil)
 	if err != nil {
 		return nil, err
 	}

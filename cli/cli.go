@@ -50,7 +50,7 @@ func prompt(scanner *bufio.Scanner, field string) string {
 
 func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 	identity crypto.SelfIdentity, contacts crypto.ContactsIdentityList,
-	messages ipmail.MessageList, sent ipmail.MessageList) {
+	messages ipmail.MessageList, sent ipmail.MessageList, requests ipmail.MessageList) {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	if messages == nil {
@@ -58,6 +58,9 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 	}
 	if sent == nil {
 		sent = ipmail.NewMessageList()
+	}
+	if requests == nil {
+		requests = ipmail.NewMessageList()
 	}
 
 	if identity == nil {
@@ -113,7 +116,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 				if err != nil {
 					return
 				}
-				msg := crypto.NewMessage(encryptedMsg, seq, origin, identity, contacts,
+				msg := crypto.NewMessage(encryptedMsg, seq, origin, ipfs, identity, contacts,
 					func(keys []gpg.Key, symmetric bool) ([]byte, error) {
 						result := make([]byte, 0)
 						for _, key := range keys {
@@ -128,8 +131,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 					})
 				if msg != nil {
 					entities := identity.EntityList()
-
-					for _, entity := range entities {
+					for _, entity := range entities { // if msg is from self add to sent list
 						if msg.IsFrom(entity) {
 							fmt.Println("Message added to sent list")
 							sent.Add(msg)
@@ -140,6 +142,24 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 							return
 						}
 					}
+
+					entities = contacts.ToArray()
+					inContacts := false
+					for _, entity := range entities { // if msg is from a non contact add to requests list
+						if msg.IsFrom(entity) {
+							inContacts = true
+							break
+						}
+					}
+					if !inContacts {
+						fmt.Println("Contact Request added")
+						requests.Add(msg)
+						err := messages.SaveToFile(viper.GetString("requests"))
+						if err != nil {
+							println("warning: contact requests could not be saved to file due to:", err.Error())
+						}
+					}
+
 					fmt.Println("Message added to inbox")
 					messages.Add(msg)
 					err := messages.SaveToFile(viper.GetString("messages"))
@@ -296,10 +316,51 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 				}()
 			} else if strings.HasPrefix(read, "list") || len(strings.TrimSpace(read)) == 0 {
 				printEntities(read, contacts.ToArray(), contactsHashList)
+			} else if strings.HasPrefix(read, "requests") {
+				read := strings.TrimSpace(read[8:])
+				if strings.HasPrefix(read, "accept") {
+					read = strings.TrimSpace(read[6:])
+					split := strings.Split(read, " ")
+					for _, toAccept := range split {
+						id, err := strconv.ParseUint(toAccept, 10, 64)
+						if err != nil {
+							fmt.Println("warning: could not parse", toAccept, " due to:", err.Error())
+						} else {
+							msg := requests.FromId(id)
+							contacts.Add(msg.From())
+							requests.Remove(msg)
+						}
+					}
+				} else if strings.HasPrefix(read, "deny") {
+					read = strings.TrimSpace(read[4:])
+					split := strings.Split(read, " ")
+					for _, toDeny := range split {
+						id, err := strconv.ParseUint(toDeny, 10, 64)
+						if err != nil {
+							fmt.Println("warning: could not parse", toDeny, " due to:", err.Error())
+						} else {
+							msg := requests.FromId(id)
+							requests.Remove(msg)
+						}
+					}
+				} else {
+					println("-- Requests --")
+					requests.ForEach(func(message crypto.Message) {
+						println(message.String())
+					})
+				}
 			}
 		} else if strings.HasPrefix(read, "identity") {
 			read = strings.TrimSpace(read[8:])
-			printEntities(read, identity.EntityList(), identityHashList)
+			if strings.HasPrefix(read, "share") {
+				read = strings.TrimSpace(read[5:])
+				id := identityHashList.Front().Value.(cid.Cid)
+				read = "send ipfsto:" + read + " ipfs:" + id.String()
+				sharing = true
+				goto send
+			} else {
+				printEntities(read, identity.EntityList(), identityHashList)
+			}
 		} else if strings.HasPrefix(read, "exit") ||
 			strings.HasPrefix(read, "quit") {
 			return
@@ -310,9 +371,12 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 			println("? - Prints out this message")
 			println("contacts [list] - Prints a list of your contacts")
 			println("contacts add <content ID> - Tries to add a contact by their content ID")
+			println("contacts requests - Prints a list of your contact requests")
+			println("contacts requests [accept|deny] <request ID> - Accepts or denies a contact request")
 			println("exit - Quits the mail client")
 			println("identity - Prints an IPFS content ID for your default identity")
 			println("identity qrcode - Prints a QR code of your default identity")
+			println("identity share <content ID> - Shares your identity with anyone by their content ID")
 			println("list - Prints a summary of your received messages")
 			println("list sent - Prints a summary of all your sent messages")
 			println("quit - Quits the mail client")
