@@ -18,7 +18,7 @@ const configName = "config"
 
 func setupConfig() error {
 	viper.SetConfigName(configName)
-	viper.SetConfigType("ini")
+	viper.SetConfigType("prop")
 	viper.AddConfigPath(xdg.ConfigHome() + "/ipmail")
 	_ = os.Mkdir(xdg.ConfigHome()+"/ipmail", os.ModeDir|0755)
 	_ = os.Mkdir(xdg.DataHome()+"/ipmail", os.ModeDir|0755)
