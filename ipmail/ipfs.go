@@ -264,10 +264,7 @@ func NewIpfsWithRepo(useLocalNode bool, path *string) (*Ipfs, error) {
 		result.api = ipfs
 	}
 
-	err := connectToPeers(ctx, result.api, bootstrapNodes)
-	if err != nil {
-		return nil, err
-	}
+	go connectToPeers(ctx, result.api, bootstrapNodes)
 
 	//fmt.Println("IPFS node is running")
 
