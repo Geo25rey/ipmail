@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"ipmail/cli"
+	"ipmail/gui"
 	"ipmail/ipmail"
 	"ipmail/ipmail/crypto"
 	"os"
@@ -43,6 +44,7 @@ func parseCmdLine() error {
 	flag.String("sent", xdg.DataHome()+"/ipmail"+"/"+"sent", "")
 	flag.String("requests", xdg.DataHome()+"/ipmail"+"/"+"requests", "")
 	flag.String("ipfs-repo", xdg.DataHome()+"/ipmail"+"/"+"ipfs-repo", "")
+	flag.Bool("experimental-gui", false, "")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
@@ -98,6 +100,10 @@ func main() {
 	sent := ipmail.NewMessageListFromFile(sentFile, ipfs, identity, contacts) // nil if file not found
 	requestsFile := viper.GetString("requests")
 	requests := ipmail.NewMessageListFromFile(requestsFile, ipfs, identity, contacts) // nil if file not found
-	cli.Run(ipfs, sender, receiver, identity, contacts, messages, sent, requests)
+	if viper.GetBool("experimental-gui") {
+		gui.Run(ipfs, sender, receiver, identity, contacts, messages, sent, requests)
+	} else {
+		cli.Run(ipfs, sender, receiver, identity, contacts, messages, sent, requests)
+	}
 	receiver.Close()
 }

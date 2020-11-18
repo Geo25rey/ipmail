@@ -65,3 +65,5 @@
 6 Make a better way of handling sent messages vs messages sent to self
 
 7 Add an easy method of transferring user data to another device
+
+8 Add system tray support (github.com/getlantern/systray)

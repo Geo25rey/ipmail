@@ -16,6 +16,8 @@ type MessageList interface {
 	ForEach(do func(message crypto.Message))
 	FromId(id uint64) crypto.Message
 	SaveToFile(file string) error
+	Len() int
+	FromIndex(idx int) crypto.Message
 }
 
 type messageList struct {
@@ -78,12 +80,33 @@ func (m *messageList) Remove(message crypto.Message) {
 	m.mtx.Unlock()
 }
 
+func (m *messageList) Len() int {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	return m.list.Len()
+}
+
 func (m *messageList) ForEach(do func(message crypto.Message)) {
 	m.mtx.Lock()
 	for elm := m.list.Front(); elm != nil; elm = elm.Next() {
 		do(elm.Value.(crypto.Message))
 	}
 	m.mtx.Unlock()
+}
+
+func (m *messageList) FromIndex(idx int) crypto.Message {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	var result crypto.Message = nil
+	for i, elm := 0, m.list.Front(); elm != nil; elm = elm.Next() {
+		msg := elm.Value.(crypto.Message)
+		if i == idx {
+			result = msg
+			break
+		}
+		i++
+	}
+	return result
 }
 
 func (m *messageList) FromId(id uint64) crypto.Message {

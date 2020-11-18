@@ -5,3 +5,4 @@ ipfs-repo = test_data/test1/ipfs-repo
 messages = test_data/test1/messages
 sent = test_data/test1/sent
 requests = test_data/test1/requests
+experimental-gui = true
