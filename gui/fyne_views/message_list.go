@@ -23,11 +23,11 @@ func MakeContent(messages ipmail.MessageList) fyne.CanvasObject {
 				widget.NewLabel("Template Object"))
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
-			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(messages.FromId(uint64(id)).String())
+			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(messages.FromIndex(id).String())
 		},
 	)
 	list.OnSelected = func(id widget.ListItemID) {
-		label.SetText(string(messages.FromId(uint64(id)).Data()))
+		label.SetText(string(messages.FromIndex(id).Data()))
 		icon.SetResource(theme.DocumentIcon())
 	}
 	list.OnUnselected = func(id widget.ListItemID) {
