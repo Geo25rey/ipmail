@@ -34,7 +34,7 @@ func ParseEntity(str string, ipfs Cat) (*gpg.Entity, error) {
 			return nil, err
 		}
 	} else if strings.HasPrefix(str, "ipfs:") {
-		parse, err := cid.Parse(str[5:])
+		parse, err := cid.Parse([]byte(str[5:]))
 		if err != nil {
 			return nil, err
 		}

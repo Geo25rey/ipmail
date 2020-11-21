@@ -18,7 +18,6 @@ import (
 	"github.com/ipfs/go-cid"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
-	"github.com/skip2/go-qrcode"
 	"github.com/spf13/viper"
 	"io"
 	views "ipmail/gui/fyne_views"
@@ -123,7 +122,7 @@ func initMenuBar(w *fyne.Window,
 	// TODO implement find
 	findItem := fyne.NewMenuItem("Find", func() {})
 
-	helpMenu := fyne.NewMenu("Help")// TODO implement help menu
+	helpMenu := fyne.NewMenu("Help") // TODO implement help menu
 	//fyne.NewMenuItem("Documentation", func() {
 	//	u, _ := url.Parse("https://developer.fyne.io")
 	//	_ = (*a).OpenURL(u)
@@ -237,17 +236,26 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 			w.Show()
 		}))
 
+		contactRequests := views.MakeContactRequestsManager(contacts, requests)
 		toolbar.Append(widget.NewToolbarAction(theme.VisibilityIcon(), func() {
 			w := a.NewWindow("Contact Requests")
-			w.SetContent(views.MakeContactRequestsManager(contacts, requests))
+			w.SetContent(contactRequests)
+			w.Show()
+		}))
+
+		contactsHashList := newEntityHashList(contacts.ToArray(), ipfs)
+		contactsList := views.MakeContactsList(contacts, contactsHashList)
+		toolbar.Append(widget.NewToolbarAction(theme.ComputerIcon(), func() {
+			w := a.NewWindow("Contacts List")
+			w.SetContent(contactsList)
 			w.Show()
 		}))
 
 		identityHashList := newEntityHashList(identity.EntityList(), ipfs)
 
 		toolbar.Append(widget.NewToolbarAction(theme.MailSendIcon(), func() {
-			d := dialog.NewEntryDialog("Send Contact Request", "User's Content ID", func(s string) {
-				self_id := identityHashList.Front().Value.(cid.Cid)
+			self_id := identityHashList.Front().Value.(cid.Cid)
+			d := dialog.NewEntryDialog("Your ID is \""+self_id.String()+"\"", "Share to:", func(s string) {
 				id, err := cid.Parse(s)
 				to := crypto.NewIdentityList(identity.DefaultIdentity())
 				if err == nil {
@@ -277,8 +285,6 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 			}, topWindow)
 			d.Show()
 		}))
-
-		//contactsHashList := newEntityHashList(contacts.ToArray(), ipfs)
 
 		receiver.OnMessage(func(message iface.PubSubMessage) {
 			seq, _ := util.BytesToUint64(message.Seq())
@@ -602,28 +608,4 @@ func newEntityHashList(entities gpg.EntityList, ipfs *ipmail.Ipfs) *list.List {
 		}()
 	}
 	return identityHashList
-}
-
-func printEntities(read string, entities gpg.EntityList, hashList *list.List) {
-	printQR := false
-	if strings.EqualFold(read, "qrcode") {
-		printQR = true
-	}
-	for i, hash := 0, hashList.Front(); i < len(entities) && hash != nil; i, hash = i+1, hash.Next() {
-		if hash.Value == nil {
-			continue
-		}
-		id := hash.Value.(cid.Cid)
-		entity := entities[i]
-		entityStr := util.EntityToString(entity)
-		qrStr := ""
-		if printQR {
-			qr, err := qrcode.New(id.String(), qrcode.Low)
-			if err != nil {
-				continue
-			}
-			qrStr = qr.ToSmallString(false)
-		}
-		fmt.Printf("%s%s -> %s\n", qrStr, id, entityStr)
-	}
 }
