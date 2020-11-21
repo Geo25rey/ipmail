@@ -12,7 +12,8 @@ import (
 func MakeContactRequestsManager(
 	contacts crypto.ContactsIdentityList, requests ipmail.MessageList,
 ) fyne.CanvasObject {
-	list := widget.NewList(
+	var list *widget.List
+	list = widget.NewList(
 		func() int {
 			return requests.Len()
 		},
@@ -29,10 +30,12 @@ func MakeContactRequestsManager(
 				// accepted
 				contacts.Add(msg.From())
 				requests.Remove(msg)
+				(*(&list)).Refresh()
 			}
 			objs[2].(*widget.Button).OnTapped = func() {
 				// rejected
 				requests.Remove(msg)
+				(*(&list)).Refresh()
 			}
 		},
 	)

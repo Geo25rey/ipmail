@@ -352,6 +352,8 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 							if err != nil {
 								println("warning: contact requests could not be saved to file due to:", err.Error())
 							}
+							contactRequests.Refresh()
+							return
 						}
 
 						messages.Add(msg)
