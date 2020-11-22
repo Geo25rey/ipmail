@@ -44,7 +44,7 @@ func parseCmdLine() error {
 	flag.String("sent", xdg.DataHome()+"/libipmail"+"/"+"sent", "")
 	flag.String("requests", xdg.DataHome()+"/libipmail"+"/"+"requests", "")
 	flag.String("ipfs-repo", xdg.DataHome()+"/libipmail"+"/"+"ipfs-repo", "")
-	flag.Bool("experimental-gui", false, "")
+	flag.Bool("experimental-gui", true, "")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
