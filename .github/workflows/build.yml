@@ -8,14 +8,12 @@ on:
 
 jobs:
 
-  build-linux:
-    name: Build ${{ matrix.name }}
+  build:
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        name: [Linux, Windows, Mac]
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        os-dep: [sudo apt install libxcursor-dev, echo, echo]
     steps:
 
     - name: Set up Go 1.x
@@ -27,9 +25,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Get dependencies
-      run: |
-        ${{ matrix.os-dep }} |
-        go get -v -t -d ./...
+      run: sudo apt install libxcursor-dev || true && go get -v -t -d ./...
 
     - name: Build
       run: go build -v .
