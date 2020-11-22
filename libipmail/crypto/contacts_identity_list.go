@@ -2,7 +2,7 @@ package crypto
 
 import (
 	gpg "github.com/Geo25rey/crypto/openpgp"
-	"ipmail/ipmail/util"
+	"ipmail/libipmail/util"
 	"os"
 )
 

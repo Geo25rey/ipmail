@@ -21,9 +21,9 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	views "ipmail/gui/fyne_views"
-	"ipmail/ipmail"
-	"ipmail/ipmail/crypto"
-	"ipmail/ipmail/util"
+	"ipmail/libipmail"
+	"ipmail/libipmail/crypto"
+	"ipmail/libipmail/util"
 	"strings"
 	"sync"
 )
@@ -160,7 +160,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		requests = ipmail.NewMessageList()
 	}
 
-	a := app.NewWithID("io.ipmail")
+	a := app.NewWithID("io.libipmail")
 	topWindow := a.NewWindow("InterPlanetary Mail")
 	initMenuBar(&topWindow, &identity, &contacts, &sender)
 	topWindow.SetMaster()

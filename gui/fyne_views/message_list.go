@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
-	"ipmail/ipmail"
+	"ipmail/libipmail"
 )
 
 func MakeContent(messages ipmail.MessageList) fyne.CanvasObject {

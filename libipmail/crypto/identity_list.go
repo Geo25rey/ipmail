@@ -54,7 +54,7 @@ func (i *identityList) AddFromKeyRing(ring gpg.KeyRing) {
 	}
 }
 
-func (i *identityList) ForEach(do func(entity *gpg.Entity))  {
+func (i *identityList) ForEach(do func(entity *gpg.Entity)) {
 	for elm := i.list.Front(); elm != nil; elm = elm.Next() {
 		do(elm.Value.(*gpg.Entity))
 	}
@@ -63,7 +63,6 @@ func (i *identityList) ForEach(do func(entity *gpg.Entity))  {
 func (i *identityList) GetAny() *gpg.Entity {
 	return i.list.Front().Value.(*gpg.Entity)
 }
-
 
 func (i *identityList) GetByName(name string) IdentityList {
 	result := NewIdentityList()
@@ -110,7 +109,7 @@ func (i *identityList) GetByPublicKey(key packet.PublicKey) (IdentityList, error
 		if err != nil {
 			return nil, err
 		}
-		comparing , err := ioutil.ReadAll(r)
+		comparing, err := ioutil.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}

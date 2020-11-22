@@ -6,7 +6,7 @@ import (
 
 func BytesToInt32(bytes []byte) (int32, error) {
 	if len(bytes) > 4 {
-		return 0, fmt.Errorf("int32 can only have a max of 4 " +
+		return 0, fmt.Errorf("int32 can only have a max of 4 "+
 			"bytes. bytes passed in: %d", len(bytes))
 	}
 	var result int32 = 0
@@ -18,7 +18,7 @@ func BytesToInt32(bytes []byte) (int32, error) {
 
 func BytesToInt64(bytes []byte) (int64, error) {
 	if len(bytes) > 8 {
-		return 0, fmt.Errorf("int64 can only have a max of 8 " +
+		return 0, fmt.Errorf("int64 can only have a max of 8 "+
 			"bytes. bytes passed in: %d", len(bytes))
 	}
 	var result int64 = 0
@@ -30,7 +30,7 @@ func BytesToInt64(bytes []byte) (int64, error) {
 
 func BytesToUint32(bytes []byte) (uint32, error) {
 	if len(bytes) > 4 {
-		return 0, fmt.Errorf("uint32 can only have a max of 4 " +
+		return 0, fmt.Errorf("uint32 can only have a max of 4 "+
 			"bytes. bytes passed in: %d", len(bytes))
 	}
 	var result uint32 = 0
@@ -42,7 +42,7 @@ func BytesToUint32(bytes []byte) (uint32, error) {
 
 func BytesToUint64(bytes []byte) (uint64, error) {
 	if len(bytes) > 8 {
-		return 0, fmt.Errorf("uint64 can only have a max of 8 " +
+		return 0, fmt.Errorf("uint64 can only have a max of 8 "+
 			"bytes. bytes passed in: %d", len(bytes))
 	}
 	var result uint64 = 0

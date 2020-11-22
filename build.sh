@@ -3,7 +3,7 @@
 mkdir build
 cd build
 rm -r .
-go build ../main.go
+go build ..
 mv main ipmail
 cd ..
 

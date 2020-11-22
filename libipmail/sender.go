@@ -7,8 +7,8 @@ import (
 	"github.com/ipfs/go-cid"
 	"io"
 	"io/ioutil"
-	crypto2 "ipmail/ipmail/crypto"
-	"ipmail/ipmail/util"
+	crypto2 "ipmail/libipmail/crypto"
+	"ipmail/libipmail/util"
 )
 
 type Sender interface {

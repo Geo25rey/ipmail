@@ -5,8 +5,8 @@ import (
 	"fyne.io/fyne/container"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
-	"ipmail/ipmail"
-	"ipmail/ipmail/crypto"
+	"ipmail/libipmail"
+	"ipmail/libipmail/crypto"
 )
 
 func MakeContactRequestsManager(

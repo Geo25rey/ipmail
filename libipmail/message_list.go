@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"container/list"
 	"io/ioutil"
-	"ipmail/ipmail/crypto"
-	"ipmail/ipmail/util"
+	"ipmail/libipmail/crypto"
+	"ipmail/libipmail/util"
 	"os"
 	"sync"
 )

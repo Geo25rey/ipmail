@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"ipmail/cli"
 	"ipmail/gui"
-	"ipmail/ipmail"
-	"ipmail/ipmail/crypto"
+	"ipmail/libipmail"
+	"ipmail/libipmail/crypto"
 	"os"
 	"path"
 	"strings"
@@ -20,12 +20,12 @@ const configName = "config"
 func setupConfig() error {
 	viper.SetConfigName(configName)
 	viper.SetConfigType("prop")
-	viper.AddConfigPath(xdg.ConfigHome() + "/ipmail")
-	_ = os.Mkdir(xdg.ConfigHome()+"/ipmail", os.ModeDir|0755)
-	_ = os.Mkdir(xdg.DataHome()+"/ipmail", os.ModeDir|0755)
-	if _, err := os.Stat(path.Join(xdg.ConfigHome()+"/ipmail", configName+".prop")); os.IsNotExist(err) {
+	viper.AddConfigPath(xdg.ConfigHome() + "/libipmail")
+	_ = os.Mkdir(xdg.ConfigHome()+"/libipmail", os.ModeDir|0755)
+	_ = os.Mkdir(xdg.DataHome()+"/libipmail", os.ModeDir|0755)
+	if _, err := os.Stat(path.Join(xdg.ConfigHome()+"/libipmail", configName+".prop")); os.IsNotExist(err) {
 		err := ioutil.WriteFile(
-			path.Join(xdg.ConfigHome()+"/ipmail", configName+".prop"),
+			path.Join(xdg.ConfigHome()+"/libipmail", configName+".prop"),
 			[]byte(""),
 			0660)
 		if err != nil {
@@ -37,13 +37,13 @@ func setupConfig() error {
 }
 
 func parseCmdLine() error {
-	flag.String("config", xdg.ConfigHome()+"/ipmail"+"/"+configName+".prop", "loads specified config file")
-	flag.String("identity", xdg.DataHome()+"/ipmail"+"/"+"identity", "")
-	flag.String("contacts", xdg.DataHome()+"/ipmail"+"/"+"contacts", "")
-	flag.String("messages", xdg.DataHome()+"/ipmail"+"/"+"messages", "")
-	flag.String("sent", xdg.DataHome()+"/ipmail"+"/"+"sent", "")
-	flag.String("requests", xdg.DataHome()+"/ipmail"+"/"+"requests", "")
-	flag.String("ipfs-repo", xdg.DataHome()+"/ipmail"+"/"+"ipfs-repo", "")
+	flag.String("config", xdg.ConfigHome()+"/libipmail"+"/"+configName+".prop", "loads specified config file")
+	flag.String("identity", xdg.DataHome()+"/libipmail"+"/"+"identity", "")
+	flag.String("contacts", xdg.DataHome()+"/libipmail"+"/"+"contacts", "")
+	flag.String("messages", xdg.DataHome()+"/libipmail"+"/"+"messages", "")
+	flag.String("sent", xdg.DataHome()+"/libipmail"+"/"+"sent", "")
+	flag.String("requests", xdg.DataHome()+"/libipmail"+"/"+"requests", "")
+	flag.String("ipfs-repo", xdg.DataHome()+"/libipmail"+"/"+"ipfs-repo", "")
 	flag.Bool("experimental-gui", false, "")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)

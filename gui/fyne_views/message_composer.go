@@ -7,8 +7,8 @@ import (
 	"fyne.io/fyne/dialog"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
-	"ipmail/ipmail"
-	"ipmail/ipmail/crypto"
+	"ipmail/libipmail"
+	"ipmail/libipmail/crypto"
 )
 
 func makeToolBar(w fyne.Window, send func()) *widget.Toolbar {
