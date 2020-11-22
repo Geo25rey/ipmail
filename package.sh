@@ -21,3 +21,11 @@ CC=x86_64-w64-mingw32-gcc fyne package -os windows -appID io.ipmail -release -so
 cd ..
 
 mv ipmail* build/
+
+rm fyne.syso
+
+cd build
+
+# Compress the newly created packages
+zip -r ipmail.exe.zip ipmail.exe
+zip -r ipmail.app.zip ipmail.app/
