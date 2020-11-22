@@ -9,10 +9,11 @@ on:
 jobs:
 
   build-linux:
-    name: Build Linux
+    name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        name: [Linux, Windows, Mac]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
 
