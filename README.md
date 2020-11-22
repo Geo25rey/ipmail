@@ -1,3 +1,5 @@
+![Build](https://github.com/Geo25rey/ipmail/workflows/Build/badge.svg)
+
 # InterPlanetary Mail
 InterPlanetary Mail (IPMail) is a decentralized email alternative, which uses IPFS to send and receive encrypted messages. 
 
