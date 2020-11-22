@@ -69,3 +69,5 @@
 8 Add system tray support (github.com/getlantern/systray)
 
 9 Add key validation to crypto
+
+10 Make an app icon for `fyne package`
