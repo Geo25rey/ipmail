@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [{ubuntu-latest, windows-latest, macOS-latest]
     steps:
 
     - name: Set up Go 1.x
@@ -23,9 +23,22 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+      
+      
+    - name: Install Dependencies (Linux)
+      run: sudo apt-get install libxcursor-dev
+      if: matrix.os == 'ubuntu-latest'
+      
+    - name: Install Dependencies (Windows)
+      run: echo
+      if: matrix.os == 'windows-latest'
+      
+    - name: Install Dependencies (macOS)
+      run: echo
+      if: matrix.os == 'macos-latest'
 
-    - name: Get dependencies
-      run: sudo apt install libxcursor-dev || true && go get -v -t -d ./...
+    - name: Get Go dependencies
+      run: go get -v -t -d ./...
 
     - name: Build
       run: go build -v .
