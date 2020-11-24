@@ -54,12 +54,14 @@ jobs:
       
     - name: Finalize Package (Windows)
       run: Compress-Archive -LiteralPath ipmail.exe -DestinationPath ipmail.exe.zip
+      if: matrix.os == 'windows-latest'
       
     - name: Finalize Package (macOS)
       run: |
         mkdir temp
         chmod a+x ipmail.app/Contents/MacOS/ipmail
         mv ipmail.app temp/
+      if: matrix.os == 'macos-latest'
       
     - uses: actions/upload-artifact@v2
       with:
