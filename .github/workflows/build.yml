@@ -52,6 +52,15 @@ jobs:
     - name: Package
       run: fyne package
       
+    - name: Finalize Package (Windows)
+      run: Compress-Archive -LiteralPath ipmail.exe -DestinationPath ipmail.exe.zip
+      
+    - name: Finalize Package (macOS)
+      run: |
+        mkdir temp
+        chmod a+x ipmail.app/Contents/MacOS/ipmail
+        mv ipmail.app temp/
+      
     - uses: actions/upload-artifact@v2
       with:
         name: Linux Latest Build
@@ -61,11 +70,11 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: Windows Latest Build
-        path: ipmail.exe
+        path: ipmail.exe.zip
       if: matrix.os == 'windows-latest'
     
     - uses: actions/upload-artifact@v2
       with:
         name: Mac Latest Build
-        path: ipmail.app
+        path: temp
       if: matrix.os == 'macos-latest'
