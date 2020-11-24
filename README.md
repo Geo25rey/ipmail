@@ -3,6 +3,8 @@
 # InterPlanetary Mail
 InterPlanetary Mail (IPMail) is a decentralized email alternative, which uses IPFS to send and receive encrypted messages. 
 
+Download the latest build [here](https://github.com/Geo25rey/ipmail/actions?query=is%3Acompleted+branch%3Amaster+workflow%3ABuild). Note that to download these builds you must be logged in to your GitHub account.
+
 ## Building
 1) Install the go compiler [here](https://golang.org/dl/) or from your favorite package manager.
 2) Run `./build.sh`<br/>
