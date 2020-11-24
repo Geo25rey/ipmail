@@ -58,9 +58,8 @@ jobs:
       
     - name: Finalize Package (macOS)
       run: |
-        mkdir temp
         chmod a+x ipmail.app/Contents/MacOS/ipmail
-        mv ipmail.app temp/
+        zip -r ipmail.app.zip ipmail.app
       if: matrix.os == 'macos-latest'
       
     - uses: actions/upload-artifact@v2
@@ -78,5 +77,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: Mac Latest Build
-        path: temp
+        path: ipmail.app.zip
       if: matrix.os == 'macos-latest'
