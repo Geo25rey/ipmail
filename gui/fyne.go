@@ -19,7 +19,6 @@ import (
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
 	"github.com/spf13/viper"
-	"io"
 	views "ipmail/gui/fyne_views"
 	"ipmail/libipmail"
 	"ipmail/libipmail/crypto"
@@ -601,21 +600,17 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 
 func newEntityHashList(entities gpg.EntityList, ipfs *ipmail.Ipfs) *list.List {
 	identityHashList := list.New()
+	buf := bytes.NewBuffer(make([]byte, 0))
 	for _, entity := range entities {
-		func() {
-			r, w := io.Pipe()
-			defer r.Close()
-			go func() {
-				defer w.Close()
-				entity.Serialize(w)
-			}()
-			resolved, _ := ipfs.AddFromReader(r)
-			if resolved != nil {
-				identityHashList.PushBack(resolved.Cid())
-			} else {
-				identityHashList.PushBack(nil)
-			}
-		}()
+		if err := entity.Serialize(buf); err != nil {
+			continue
+		}
+		resolved, _ := ipfs.AddFromReader(buf)
+		if resolved != nil {
+			identityHashList.PushBack(resolved.Cid())
+		} else {
+			identityHashList.PushBack(nil)
+		}
 	}
 	return identityHashList
 }
