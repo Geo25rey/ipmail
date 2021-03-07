@@ -24,6 +24,7 @@ import (
 	"ipmail/libipmail"
 	"ipmail/libipmail/crypto"
 	"ipmail/libipmail/util"
+	"os"
 	"strings"
 	"sync"
 )
@@ -194,7 +195,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 		onResults := func(results []string, err error) {
 			if err != nil {
 				println(err.Error())
-				return
+				os.Exit(0)
 			}
 			name := results[0]
 			comment := results[1]
@@ -202,12 +203,12 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 			identity, err = crypto.NewSelfIdentity(name, comment, email)
 			if err != nil {
 				println(err.Error())
-				return
+				os.Exit(0)
 			}
 			err = identity.SaveToFile(viper.GetString("identity"))
 			if err != nil {
 				println(err.Error())
-				return
+				os.Exit(0)
 			}
 			if contacts != nil {
 				contacts.Add(identity.EntityList()...)
