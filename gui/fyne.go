@@ -38,7 +38,7 @@ func hasInvalidCharacters(s string) error {
 	return nil
 }
 
-func prompt(window fyne.Window, onResults func([]string, error), isPassword bool, title string, content string, fields ...string) {
+func prompt(window fyne.Window, onResults func([]string, error), isPassword bool, title string, content string, width int, fields ...string) {
 	results := make([]string, 0)
 	contentLbl := widget.NewLabel(content)
 	contentLbl.Wrapping = fyne.TextWrapWord
@@ -69,10 +69,11 @@ func prompt(window fyne.Window, onResults func([]string, error), isPassword bool
 	form := &widget.Form{
 		Items: formItems,
 	}
-	dialog.ShowCustomConfirm(title, "Create", "Exit",
-		container.NewVBox(widget.NewLabel(title),
+	dialogBox := dialog.NewCustomConfirm(title, "Create", "Exit",
+		container.NewVBox(
 			widget.NewSeparator(),
 			contentLbl,
+			widget.NewSeparator(),
 			form,
 		), func(submitted bool) {
 			if submitted {
@@ -81,6 +82,10 @@ func prompt(window fyne.Window, onResults func([]string, error), isPassword bool
 				go onResults(nil, errors.New("user cancelled the form"))
 			}
 		}, window)
+	dialogBox.Show()
+	windowSize := window.Canvas().Size()
+	dialogBox.Resize(fyne.NewSize(width, windowSize.Height))
+	dialogBox.Refresh()
 }
 
 func initMenuBar(w *fyne.Window,
@@ -209,12 +214,14 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 			}
 			identitySet.Unlock()
 		}
+		windowSize := topWindow.Canvas().Size()
+		width := fyne.Min(int(0.8*float64(windowSize.Width)), 400)
 		prompt(topWindow, onResults, false, "Welcome",
 			"Looks like this is your first time here. Welcome! "+
 				"You can optionally enter your name, a comment, and your email "+
 				"to help identify yourself to people you message. "+
 				"Don't worry this information is only stored on your computer.",
-			"Name", "Comment", "Email")
+			width, "Name", "Comment", "Email")
 	}
 
 	go func() {
@@ -320,7 +327,7 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 								resultMtx.Unlock()
 							}
 							prompt(topWindow, onResults, true,
-								"Unlock your encrypted private keys", "", keyStrings...)
+								"Unlock your encrypted private keys", "", 400, keyStrings...)
 							resultMtx.Lock()
 							defer resultMtx.Unlock()
 							return result, err
