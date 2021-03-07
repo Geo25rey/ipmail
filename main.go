@@ -17,15 +17,18 @@ import (
 
 const configName = "config"
 
+var configDir = path.Join(strings.ReplaceAll(xdg.ConfigHome(), "\\", "/"), "ipmail")
+var dataDir = path.Join(strings.ReplaceAll(xdg.DataHome(), "\\", "/"), "ipmail")
+
 func setupConfig() error {
 	viper.SetConfigName(configName)
 	viper.SetConfigType("prop")
-	viper.AddConfigPath(xdg.ConfigHome() + "/libipmail")
-	_ = os.Mkdir(xdg.ConfigHome()+"/libipmail", os.ModeDir|0755)
-	_ = os.Mkdir(xdg.DataHome()+"/libipmail", os.ModeDir|0755)
-	if _, err := os.Stat(path.Join(xdg.ConfigHome()+"/libipmail", configName+".prop")); os.IsNotExist(err) {
+	viper.AddConfigPath(configDir)
+	_ = os.Mkdir(configDir, os.ModeDir|0755)
+	_ = os.Mkdir(dataDir, os.ModeDir|0755)
+	if _, err := os.Stat(path.Join(configDir, configName+".prop")); os.IsNotExist(err) {
 		err := ioutil.WriteFile(
-			path.Join(xdg.ConfigHome()+"/libipmail", configName+".prop"),
+			path.Join(configDir, configName+".prop"),
 			[]byte(""),
 			0660)
 		if err != nil {
@@ -37,13 +40,13 @@ func setupConfig() error {
 }
 
 func parseCmdLine() error {
-	flag.String("config", xdg.ConfigHome()+"/libipmail"+"/"+configName+".prop", "loads specified config file")
-	flag.String("identity", xdg.DataHome()+"/libipmail"+"/"+"identity", "")
-	flag.String("contacts", xdg.DataHome()+"/libipmail"+"/"+"contacts", "")
-	flag.String("messages", xdg.DataHome()+"/libipmail"+"/"+"messages", "")
-	flag.String("sent", xdg.DataHome()+"/libipmail"+"/"+"sent", "")
-	flag.String("requests", xdg.DataHome()+"/libipmail"+"/"+"requests", "")
-	flag.String("ipfs-repo", xdg.DataHome()+"/libipmail"+"/"+"ipfs-repo", "")
+	flag.String("config", path.Join(configDir, configName+".prop"), "loads specified config file")
+	flag.String("identity", path.Join(dataDir, "identity"), "")
+	flag.String("contacts", path.Join(dataDir, "contacts"), "")
+	flag.String("messages", path.Join(dataDir, "messages"), "")
+	flag.String("sent", path.Join(dataDir, "sent"), "")
+	flag.String("requests", path.Join(dataDir, "requests"), "")
+	flag.String("ipfs-repo", path.Join(dataDir, "ipfs-repo"), "")
 	flag.Bool("experimental-gui", true, "")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -55,6 +58,7 @@ func parseCmdLine() error {
 	_ = os.Mkdir(viper.GetString("ipfs-repo"), os.ModeDir|0755)
 
 	config := viper.GetString("config")
+	println(configDir)
 	if strings.Compare(config, viper.ConfigFileUsed()) != 0 {
 		viper.SetConfigFile(config)
 		err := viper.ReadInConfig()
