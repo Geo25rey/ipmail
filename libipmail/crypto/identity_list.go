@@ -61,7 +61,10 @@ func (i *identityList) ForEach(do func(entity *gpg.Entity)) {
 }
 
 func (i *identityList) GetAny() *gpg.Entity {
-	return i.list.Front().Value.(*gpg.Entity)
+	if front := i.list.Front(); front != nil {
+		return front.Value.(*gpg.Entity)
+	}
+	return nil
 }
 
 func (i *identityList) GetByName(name string) IdentityList {

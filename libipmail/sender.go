@@ -2,6 +2,7 @@ package ipmail
 
 import (
 	_ "crypto/sha512"
+	"errors"
 	gpg "github.com/Geo25rey/crypto/openpgp"
 	armor "github.com/Geo25rey/crypto/openpgp/armor"
 	"github.com/ipfs/go-cid"
@@ -25,6 +26,11 @@ func NewSender(ipfs *Ipfs) Sender {
 }
 
 func (this *senderCtx) Send(content io.Reader, sign bool, from *gpg.Entity, to ...*gpg.Entity) (cid.Cid, error) {
+	for _, entity := range to {
+		if entity == nil {
+			return cid.Undef, errors.New("All message recipients must be in your contacts")
+		}
+	}
 	r, w := io.Pipe()
 	defer r.Close()
 
