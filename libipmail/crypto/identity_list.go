@@ -41,7 +41,12 @@ func (i *identityList) ToArray() []*gpg.Entity {
 
 func (i *identityList) Add(entities ...*gpg.Entity) {
 	for _, entity := range entities {
-		i.list.PushBack(entity)
+		if entity != nil {
+			others, _ := i.GetByPublicKey(*entity.PrimaryKey)
+			if len(others.ToArray()) == 0 {
+				i.list.PushBack(entity)
+			}
+		}
 	}
 }
 
