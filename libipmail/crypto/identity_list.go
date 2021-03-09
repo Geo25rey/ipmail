@@ -5,8 +5,6 @@ import (
 	"container/list"
 	gpg "github.com/Geo25rey/crypto/openpgp"
 	"github.com/Geo25rey/crypto/openpgp/packet"
-	"io"
-	"io/ioutil"
 	"strings"
 )
 
@@ -97,25 +95,20 @@ func (i *identityList) GetByEmail(email string) IdentityList {
 
 func (i *identityList) GetByPublicKey(key packet.PublicKey) (IdentityList, error) {
 	result := NewIdentityList()
-	r, w := io.Pipe()
-	err := key.Serialize(w)
+	buf := bytes.NewBuffer(make([]byte, 0))
+	err := key.Serialize(buf)
 	if err != nil {
 		return nil, err
 	}
-	compareTo, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
+	compareTo := buf.Bytes()
 	for elm := i.list.Front(); elm != nil; elm = elm.Next() {
+		buf = bytes.NewBuffer(make([]byte, 0))
 		entity := elm.Value.(*gpg.Entity)
-		err := entity.PrimaryKey.Serialize(w)
+		err := entity.PrimaryKey.Serialize(buf)
 		if err != nil {
 			return nil, err
 		}
-		comparing, err := ioutil.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
+		comparing := buf.Bytes()
 		if bytes.Compare(comparing, compareTo) == 0 {
 			result.Add(entity)
 		}

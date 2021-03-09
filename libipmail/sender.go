@@ -1,13 +1,13 @@
 package ipmail
 
 import (
+	"bytes"
 	_ "crypto/sha512"
 	"errors"
 	gpg "github.com/Geo25rey/crypto/openpgp"
 	armor "github.com/Geo25rey/crypto/openpgp/armor"
 	"github.com/ipfs/go-cid"
 	"io"
-	"io/ioutil"
 	crypto2 "ipmail/libipmail/crypto"
 	"ipmail/libipmail/util"
 )
@@ -31,8 +31,6 @@ func (this *senderCtx) Send(content io.Reader, sign bool, from *gpg.Entity, to .
 			return cid.Undef, errors.New("All message recipients must be in your contacts")
 		}
 	}
-	r, w := io.Pipe()
-	defer r.Close()
 
 	var signer *gpg.Entity
 
@@ -42,34 +40,36 @@ func (this *senderCtx) Send(content io.Reader, sign bool, from *gpg.Entity, to .
 		signer = nil
 	}
 
-	go func() {
-		defer w.Close()
-		w2, err := armor.Encode(w, crypto2.MessageEncoding, make(map[string]string))
-		if err != nil {
-			return
-		}
-		defer w2.Close()
+	buf := bytes.NewBuffer(make([]byte, 0))
 
-		w3, err := gpg.Encrypt(w2, to, signer, nil, util.DefaultEncryptionConfig())
-		if err != nil {
-			return
-		}
-		defer w3.Close()
-
-		_, err = io.Copy(w3, content)
-		if err != nil {
-			return
-		}
-	}()
-
-	b, err := ioutil.ReadAll(r)
+	w2, err := armor.Encode(buf, crypto2.MessageEncoding, make(map[string]string))
 	if err != nil {
-		return cid.Cid{}, err
+		return cid.Undef, err
 	}
-	path, err := this.ipfs.AddFromBytes(b)
-	//path, err := this.ipfs.AddFromReader(r)
+
+	w3, err := gpg.Encrypt(w2, to, signer, nil, util.DefaultEncryptionConfig())
 	if err != nil {
-		return cid.Cid{}, err
+		return cid.Undef, err
+	}
+
+	_, err = io.Copy(w3, content)
+	if err != nil {
+		return cid.Undef, err
+	}
+
+	err = w3.Close()
+	if err != nil {
+		return cid.Undef, err
+	}
+
+	err = w2.Close()
+	if err != nil {
+		return cid.Undef, err
+	}
+
+	path, err := this.ipfs.AddFromReader(buf)
+	if err != nil {
+		return cid.Undef, err
 	}
 
 	return path.Cid(), this.publishMessage(path.Cid())

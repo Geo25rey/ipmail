@@ -14,7 +14,6 @@ import (
 	"github.com/ipfs/interface-go-ipfs-core/path"
 	"github.com/skip2/go-qrcode"
 	"github.com/spf13/viper"
-	"io"
 	"ipmail/libipmail"
 	"ipmail/libipmail/crypto"
 	"ipmail/libipmail/util"
@@ -292,13 +291,12 @@ func Run(ipfs *ipmail.Ipfs, sender ipmail.Sender, receiver ipmail.Receiver,
 						fmt.Printf("\"%s\" is not a valid entity\n", read)
 					} else {
 						resolved, err := func() (path.Resolved, error) {
-							r, w := io.Pipe()
-							defer r.Close()
-							go func() {
-								defer w.Close()
-								entity.Serialize(w)
-							}()
-							return ipfs.AddFromReader(r)
+							buf := bytes.NewBuffer(make([]byte, 0))
+							err := entity.Serialize(buf)
+							if err != nil {
+								return nil, err
+							}
+							return ipfs.AddFromReader(buf)
 						}()
 						if err != nil {
 							contactsHashList.PushBack(nil)
@@ -436,21 +434,17 @@ func chooseFromArray(prompt string, input func() string, array []*gpg.Entity, to
 
 func newEntityHashList(entities gpg.EntityList, ipfs *ipmail.Ipfs) *list.List {
 	identityHashList := list.New()
+	buf := bytes.NewBuffer(make([]byte, 0))
 	for _, entity := range entities {
-		func() {
-			r, w := io.Pipe()
-			defer r.Close()
-			go func() {
-				defer w.Close()
-				entity.Serialize(w)
-			}()
-			resolved, _ := ipfs.AddFromReader(r)
-			if resolved != nil {
-				identityHashList.PushBack(resolved.Cid())
-			} else {
-				identityHashList.PushBack(nil)
-			}
-		}()
+		if err := entity.Serialize(buf); err != nil {
+			continue
+		}
+		resolved, _ := ipfs.AddFromReader(buf)
+		if resolved != nil {
+			identityHashList.PushBack(resolved.Cid())
+		} else {
+			identityHashList.PushBack(nil)
+		}
 	}
 	return identityHashList
 }

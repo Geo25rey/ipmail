@@ -12,8 +12,8 @@ import (
 	"testing"
 )
 
-func TestSerialEncryption(t *testing.T)  {
-	DefaultEncryptionConfig := func () *packet.Config {
+func TestSerialEncryption(t *testing.T) {
+	DefaultEncryptionConfig := func() *packet.Config {
 		return &packet.Config{
 			DefaultHash:            crypto.SHA512,
 			DefaultCipher:          packet.CipherAES256,
@@ -27,15 +27,12 @@ func TestSerialEncryption(t *testing.T)  {
 	entity, _ := gpg.NewEntity("Name", "", "", DefaultEncryptionConfig())
 
 	// Remove Private Keys to share
-	r, w := io.Pipe()
-	defer r.Close()
-	go func() {
-		defer w.Close()
-		entity.Serialize(w)
-	}()
-	publicEntity, err := gpg.ReadEntity(packet.NewReader(r))
+	buf := bytes.NewBuffer(make([]byte, 0))
+	err := entity.Serialize(buf)
+	publicEntity, err := gpg.ReadEntity(packet.NewReader(buf))
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
 	messageSent := "Some message"
@@ -44,43 +41,54 @@ func TestSerialEncryption(t *testing.T)  {
 	println("Creating Message")
 	// Create an Encrypted Message to send
 	to := gpg.EntityList{publicEntity}
-	r, w = io.Pipe()
-	defer r.Close()
+	buf = bytes.NewBuffer(make([]byte, 0))
 
-	go func() {
-		defer w.Close()
-		w2, err := armor.Encode(w, MessageEncoding, make(map[string]string))
-		if err != nil {
-			t.Error(err)
-		}
-		defer w2.Close()
-
-		w3, err := gpg.Encrypt(w2, to, nil, nil, DefaultEncryptionConfig())
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer w3.Close()
-
-		_, err = io.Copy(w3, content)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
-
-	decode, err := armor.Decode(r)
+	w2, err := armor.Encode(buf, MessageEncoding, make(map[string]string))
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
+	}
+
+	w3, err := gpg.Encrypt(w2, to, nil, nil, DefaultEncryptionConfig())
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	_, err = io.Copy(w3, content)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	err = w3.Close()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	err = w2.Close()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	decode, err := armor.Decode(buf)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
 	}
 	messageDetails, err := gpg.ReadMessage(decode.Body, gpg.EntityList{entity}, nil, DefaultEncryptionConfig())
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 	messageRead, err := ioutil.ReadAll(messageDetails.UnverifiedBody)
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 	if strings.Compare(messageSent, string(messageRead)) != 0 {
 		t.Errorf("Message sent isn't the same as message read\n'%s' != '%s'", messageSent, string(messageRead))
+		t.FailNow()
 	}
 }

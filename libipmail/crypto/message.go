@@ -63,17 +63,8 @@ func NewMessage(encryptedData []byte, id uint64, origin peer.ID,
 
 func (m *message) decrypt(ipfs util.Cat, identity SelfIdentity, contacts ContactsIdentityList, prompt gpg.PromptFunction) error {
 	if m.decryptedData == nil {
-		r, w := io.Pipe()
-		defer r.Close()
-		go func() {
-			defer w.Close()
-			total := 0
-			for total < len(m.encryptedData) {
-				write, _ := w.Write(m.encryptedData[total:])
-				total += write
-			}
-		}()
-		decode, err := armor.Decode(r)
+		buf := bytes.NewBuffer(m.encryptedData)
+		decode, err := armor.Decode(buf)
 		if err != nil {
 			return err
 		}
@@ -88,10 +79,6 @@ func (m *message) decrypt(ipfs util.Cat, identity SelfIdentity, contacts Contact
 		body := readMessage.UnverifiedBody
 		m.decryptedData, err = ioutil.ReadAll(body)
 		if err != nil {
-			return err
-		}
-		_, err = ioutil.ReadAll(decode.Body) // allow the writer in goroutine to close
-		if err != nil {                      // fail if I/O error or armor verification fails
 			return err
 		}
 		if readMessage.IsSigned {

@@ -118,29 +118,25 @@ func EntitiesEqual(entities ...*gpg.Entity) bool {
 	compareTo := entities[0]
 	var b []byte = nil
 	if compareTo != nil {
-		r, w := io.Pipe()
-		defer r.Close()
-		go func() {
-			defer w.Close()
-			compareTo.Serialize(w)
-		}()
-		b, _ = ioutil.ReadAll(r)
+		buf := bytes.NewBuffer(make([]byte, 0))
+		err := compareTo.Serialize(buf)
+		if err != nil {
+			return false
+		}
+		b = buf.Bytes()
 	}
 
 	for _, entity := range entities[1:] {
-		if (compareTo == nil && entity != nil) || (compareTo != nil && entity == nil) {
+		if (compareTo == nil && entity != nil) || entity == nil {
 			return false
 		}
 
-		b1, _ := func() ([]byte, error) {
-			r1, w1 := io.Pipe()
-			defer r1.Close()
-			go func() {
-				defer w1.Close()
-				entity.Serialize(w1)
-			}()
-			return ioutil.ReadAll(r1)
-		}()
+		buf := bytes.NewBuffer(make([]byte, 0))
+		err := entity.Serialize(buf)
+		if err != nil {
+			return false
+		}
+		b1 := buf.Bytes()
 		if !bytes.Equal(b, b1) {
 			return false
 		}
