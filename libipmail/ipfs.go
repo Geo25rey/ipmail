@@ -143,10 +143,10 @@ func spawnEphemeral(ctx context.Context, repoPath *string) (icore.CoreAPI, error
 	}
 
 	// Create a Temporary Repo
-	_, _ = createTempRepo(repoPath)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create temp repo: %s", err)
-	//}
+	repoPath, err := createTempRepo(repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create repo: %s", err)
+	}
 
 	// Spawning an ephemeral IPFS node
 	return createNode(ctx, *repoPath)
