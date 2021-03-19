@@ -3,8 +3,15 @@ name: Build
 on:
   push:
     branches: [ master ]
+    paths:
+      - '**.go'
+      - 'go.*'
   pull_request:
     branches: [ master ]
+    paths:
+      - '**.go'
+      - '.github/workflows/*.yml'
+      - 'go.*'
 
 jobs:
 
